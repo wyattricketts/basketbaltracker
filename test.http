@@ -1,0 +1,179 @@
+/*
+# Test the Server API
+*/
+@host http://localhost:8080
+###
+# @name events
+GET /api/events
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 7295
+etag: W/"1c7f-wDDT0/14LO2yukRWDNeZpZiYwnU"
+date: Mon, 28 Apr 2025 14:26:00 GMT
+connection: close
+###
+GET /api/notthesameeventdatabasecollection
+
+HTTP/1.1 404  - Not Found
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 71
+etag: W/"47-UILyju5dntODWvs/LoE3i3yKov4"
+date: Mon, 28 Apr 2025 14:26:02 GMT
+connection: close
+###
+# @name events
+# @ref events
+GET /api/events/{{events[1]._id}}
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 337
+etag: W/"151-F+WR6usXwCScFx0yt2Busnn7KEI"
+date: Mon, 28 Apr 2025 14:26:04 GMT
+connection: close
+###
+
+GET /api/events?freeFood=true
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 3333
+etag: W/"d05-uxfOdUauwpIWMyBxv0aql3DEGQI"
+date: Mon, 28 Apr 2025 14:26:05 GMT
+connection: close
+###
+# @name events
+# @ref events
+DELETE /api/events/{{events[events.length - 1]._id}}
+
+HTTP/1.1 204  - No Content
+x-powered-by: Express
+access-control-allow-origin: *
+date: Mon, 28 Apr 2025 14:26:07 GMT
+connection: close
+###
+POST /api/events
+Content-Type: application/json
+
+{
+    "name": "Sample Event",
+    "date": "2023-03-26T12:00:00Z",
+    "location": "Sample Location",
+    "description": "Sample Description",
+    "attendees": 0,
+    "freeFood": false
+}
+
+HTTP/1.1 201  - Created
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 185
+etag: W/"b9-dmUmRAqgpDEdRxk1hlN1sitr1JY"
+date: Mon, 28 Apr 2025 14:26:09 GMT
+connection: close
+###
+# @name events
+# @ref events
+PUT /api/events/{{events[events.length - 1]._id}}
+Content-Type: application/json
+{
+    "name": "Updated Sample Event",
+    "date": "2022-03-26T12:00:00Z",
+    "location": "Updated Sample Location",
+    "description": "Updated Sample Description",
+    "attendees": 1,
+    "freeFood": true
+}
+
+HTTP/1.1 404  - Not Found
+x-powered-by: Express
+access-control-allow-origin: *
+date: Mon, 28 Apr 2025 14:26:10 GMT
+connection: close
+content-length: 0
+###
+# @name events
+# @ref events
+PATCH /api/events/{{events[events.length - 1]._id}}
+Content-Type: application/json
+{
+    "name": "Newly Updated Sample Event"
+}
+
+HTTP/1.1 404  - Not Found
+x-powered-by: Express
+access-control-allow-origin: *
+date: Mon, 28 Apr 2025 14:26:13 GMT
+connection: close
+content-length: 0
+###
+# @name events
+# @ref events
+PATCH /api/events/{{events[events.length - 2]._id}}
+Content-Type: application/json
+{
+    "date": "2022-03-26T12:00:00Z"
+}
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 333
+etag: W/"14d-+Cu9mjiaTTm/dHnHtiUUIlwSUjY"
+date: Mon, 28 Apr 2025 14:26:14 GMT
+connection: close
+###
+# @name events
+# @ref events
+PATCH /api/events/{{events[1]._id}}/rsvp
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+date: Mon, 28 Apr 2025 14:26:16 GMT
+connection: close
+content-length: 0
+###
+# @name events
+# @ref events
+PATCH /api/events/{{events[1]._id}}/unrsvp
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+date: Mon, 28 Apr 2025 14:26:17 GMT
+connection: close
+content-length: 0
+###
+GET /api/events?q="night"
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 1300
+etag: W/"514-dozIhuIgtsKLsuaKAXAFIDMhB6o"
+date: Mon, 28 Apr 2025 14:26:18 GMT
+connection: close
+###
+GET /api/events?freeFood=true&q=night
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+access-control-allow-origin: *
+content-type: application/json; charset=utf-8
+content-length: 656
+etag: W/"290-LdmXxw8oy355ZP1tGF0uPJY9gaM"
+date: Mon, 28 Apr 2025 14:26:20 GMT
+connection: close
