@@ -252,6 +252,80 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 
+app.patch('/api/events/admin/:id/approve', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+
+  let ticket;
+  try {
+    ticket = await oauthClient.verifyIdToken({
+      idToken: token,
+      audience: "625315434824-0ol6n2t84cuaf967etncrk90l2kbkjtm.apps.googleusercontent.com",
+    });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  const payload = ticket.getPayload();
+  // Check if user is admin
+  const adminUser = await db.collection('users').findOne({ email: payload.email, isAdmin: true });
+  if (!adminUser) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+
+  if (!ObjectId.isValid(req.params.id)) {
+    return res.status(404).send();
+  }
+  const eventId = new ObjectId(req.params.id);
+
+  const result = await db.collection('events').updateOne(
+    { _id: eventId },
+    { $set: { status: "approved" } }
+  );
+
+  if (result.matchedCount === 0) {
+    return res.status(404).send();
+  }
+
+  const event = await db.collection('events').findOne({ _id: eventId });
+  res.status(200).json(event);
+});
+
+
+app.delete('/api/events/admin/:id', async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '');
+
+  let ticket;
+  try {
+    ticket = await oauthClient.verifyIdToken({
+      idToken: token,
+      audience: "625315434824-0ol6n2t84cuaf967etncrk90l2kbkjtm.apps.googleusercontent.com",
+    });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  const payload = ticket.getPayload();
+  // Check if user is admin
+  const adminUser = await db.collection('users').findOne({ email: payload.email, isAdmin: true });
+  if (!adminUser) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+
+  if (!ObjectId.isValid(req.params.id)) {
+    return res.status(404).send();
+  }
+  const eventId = new ObjectId(req.params.id);
+
+  const result = await db.collection('events').deleteOne({ _id: eventId });
+  if (result.deletedCount === 0) {
+    return res.status(404).send();
+  }
+  res.status(204).send();
+});
+
+
 
 // --- Change nothing below this line ---
 

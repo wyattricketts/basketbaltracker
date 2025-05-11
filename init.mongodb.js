@@ -13,7 +13,8 @@ db.events.insertMany([
           ],
           imageUrl: "",
           userId: "107979131145326691004",
-          userEmail: "wjr78@cornell.edu"
+          userEmail: "wjr78@cornell.edu",
+          status: "approved"
     },
     {
         description: "Gently used mini fridge, perfect for dorm rooms.",
@@ -22,7 +23,8 @@ db.events.insertMany([
         tags: ["Appliance", "Firm Price"],
         imageUrl: "",
         userId: "107979131145326691004",
-        userEmail: ""
+        userEmail: "",
+        status: "approved"
     },
     {
         description: "Set of 3 textbooks for CS 1110, good condition.",
@@ -31,7 +33,8 @@ db.events.insertMany([
         tags: ["Books", "Negotiable"],
         imageUrl: "",
         userId: "107979131145326691004",
-        userEmail: ""
+        userEmail: "",
+        status: "pending"
     },
     {
         description: "Free futon, must pick up in Collegetown.",
@@ -40,7 +43,8 @@ db.events.insertMany([
         tags: ["Furniture", "Free"],
         imageUrl: "",
         userId: "",
-        userEmail: ""
+        userEmail: "",
+        status: "pending"
     },
     {
         description: "Microwave for sale, works great, moving out soon.",
@@ -49,7 +53,8 @@ db.events.insertMany([
         tags: ["Appliance", "Negotiable"],
         imageUrl: "",
         userId: "",
-        userEmail: ""
+        userEmail: "",
+        status: "pending"
     },
     {
         description: "Bike in good condition, includes lock.",
@@ -58,8 +63,22 @@ db.events.insertMany([
         tags: ["Transportation", "Firm Price"],
         imageUrl: "",
         userId: "",
-        userEmail: ""
+        userEmail: "",
+        status: "pending"
     }
 ])
 
 db.events.createIndex({ tags: "text", description: "text", location: "text" })
+
+
+use('community');
+db.users.drop();
+db.createCollection('users');
+
+db.users.insertMany([
+  {
+    name: "Admin Wyatt",
+    email: "wjr78@cornell.edu",
+    isAdmin: true
+  }
+]);
