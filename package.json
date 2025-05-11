@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "dependencies": {
+    "mongodb": "^6.16.0",
+    "mongosh": "^2.5.1"
   }
 }
