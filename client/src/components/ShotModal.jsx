@@ -1,11 +1,29 @@
 import React, { useState, useEffect } from 'react';
 
-const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = [] }) => {
-  const [shotData, setShotData] = useState(initialData);
+const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = [], onShotValueChange }) => {
+  const [formData, setFormData] = useState({
+    coordinates: { x: 0, y: 0 },
+    contestLevel: '',
+    shotCreationType: '',
+    defenseType: '',
+    shotType: '',
+    postMove: '',
+    dribbleCount: 0,
+    made: false,
+    shotValue: '2', // Make sure this is included
+    customFields: {}
+  });
 
+  // Update formData when initialData changes
   useEffect(() => {
-    setShotData(initialData);
-  }, [initialData, isOpen]);
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        ...initialData,
+        shotValue: initialData.shotValue || '2' // Ensure shotValue is set
+      }));
+    }
+  }, [initialData]);
 
   // All parameter options
   const contestLevels = ['Uncontested', 'Mid-Contest', 'Contested'];
@@ -19,12 +37,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
   // Modal position with viewport boundary checks
   const modalStyle = initialData.modalPosition
     ? {
-        position: 'fixed',
-        left: Math.min(Math.max(initialData.modalPosition.left, 300), window.innerWidth - 300),
-        top: Math.min(Math.max(initialData.modalPosition.top, 400), window.innerHeight - 400),
-        transform: 'translate(-50%, -50%)',
-        zIndex: 50,
-      }
+      position: 'fixed',
+      left: Math.min(Math.max(initialData.modalPosition.left, 300), window.innerWidth - 300),
+      top: Math.min(Math.max(initialData.modalPosition.top, 400), window.innerHeight - 400),
+      transform: 'translate(-50%, -50%)',
+      zIndex: 50,
+    }
     : {};
 
   return (
@@ -46,37 +64,37 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
               </svg>
             </button>
           </div>
-          
+
           {/* Selected Values Display */}
           <div className="flex flex-wrap gap-2 mt-3 text-sm">
-            {shotData.contestLevel && (
+            {formData.contestLevel && (
               <span className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
-                ⚡ {shotData.contestLevel}
+                ⚡ {formData.contestLevel}
               </span>
             )}
-            {shotData.shotCreationType && (
+            {formData.shotCreationType && (
               <span className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
-                🏀 {shotData.shotCreationType}
+                🏀 {formData.shotCreationType}
               </span>
             )}
-            {shotData.defenseType && (
+            {formData.defenseType && (
               <span className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
-                🛡️ {shotData.defenseType}
+                🛡️ {formData.defenseType}
               </span>
             )}
-            {shotData.shotType && (
+            {formData.shotType && (
               <span className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
-                🎯 {shotData.shotType}
+                🎯 {formData.shotType}
               </span>
             )}
-            {shotData.postMove && (
+            {formData.postMove && (
               <span className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
-                📍 {shotData.postMove}
+                📍 {formData.postMove}
               </span>
             )}
             {/* Custom Parameters Display */}
             {customParameters.map(param => {
-              const value = shotData.customFields?.[param.name];
+              const value = formData.customFields?.[param.name];
               if (value) {
                 return (
                   <span key={param.name} className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
@@ -87,12 +105,11 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
               return null;
             })}
             <span className="px-2 py-1 bg-white/20 backdrop-blur rounded-full font-medium">
-              🔢 {shotData.dribbleCount} dribbles
+              🔢 {formData.dribbleCount} dribbles
             </span>
-            <span className={`px-2 py-1 backdrop-blur rounded-full font-medium ${
-              shotData.made ? 'bg-green-400/30' : 'bg-red-400/30'
-            }`}>
-              {shotData.made ? '✅ Made' : '❌ Missed'}
+            <span className={`px-2 py-1 backdrop-blur rounded-full font-medium ${formData.made ? 'bg-green-400/30' : 'bg-red-400/30'
+              }`}>
+              {formData.made ? '✅ Made' : '❌ Missed'}
             </span>
           </div>
         </div>
@@ -102,10 +119,43 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
           <form
             onSubmit={e => {
               e.preventDefault();
-              onSubmit(shotData);
+              onSubmit(formData);
             }}
             className="space-y-5"
           >
+            {/* Shot Value Toggle */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shot Value (Auto-detected: {initialData.shotValue})
+              </label>
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, shotValue: '2' }));
+                  }}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${formData.shotValue === '2'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                  2 Pointer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, shotValue: '3' }));
+                  }}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${formData.shotValue === '3'
+                    ? 'bg-purple-500 text-white shadow-md'
+                    : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                  3 Pointer
+                </button>
+              </div>
+            </div>
+
             {/* Contest Level */}
             <div>
               <h3 className="text-base font-semibold mb-2 text-gray-800 flex items-center gap-2">
@@ -116,13 +166,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                   <button
                     key={level}
                     type="button"
-                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${
-                      shotData.contestLevel === level
-                        ? 'bg-purple-500 text-white border-purple-500 shadow-lg transform scale-105'
-                        : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300'
-                    }`}
+                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${formData.contestLevel === level
+                      ? 'bg-purple-500 text-white border-purple-500 shadow-lg transform scale-105'
+                      : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:border-purple-300'
+                      }`}
                     onClick={() =>
-                      setShotData(prev => ({ ...prev, contestLevel: level }))
+                      setFormData(prev => ({ ...prev, contestLevel: level }))
                     }
                   >
                     {level}
@@ -141,13 +190,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                   <button
                     key={type}
                     type="button"
-                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${
-                      shotData.shotCreationType === type
-                        ? 'bg-green-500 text-white border-green-500 shadow-lg transform scale-105'
-                        : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300'
-                    }`}
+                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${formData.shotCreationType === type
+                      ? 'bg-green-500 text-white border-green-500 shadow-lg transform scale-105'
+                      : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300'
+                      }`}
                     onClick={() =>
-                      setShotData(prev => ({ ...prev, shotCreationType: type }))
+                      setFormData(prev => ({ ...prev, shotCreationType: type }))
                     }
                   >
                     {type}
@@ -166,13 +214,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                   <button
                     key={type}
                     type="button"
-                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${
-                      shotData.defenseType === type
-                        ? 'bg-blue-500 text-white border-blue-500 shadow-lg transform scale-105'
-                        : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
-                    }`}
+                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${formData.defenseType === type
+                      ? 'bg-blue-500 text-white border-blue-500 shadow-lg transform scale-105'
+                      : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:border-blue-300'
+                      }`}
                     onClick={() =>
-                      setShotData(prev => ({ ...prev, defenseType: type }))
+                      setFormData(prev => ({ ...prev, defenseType: type }))
                     }
                   >
                     {type}
@@ -191,13 +238,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                   <button
                     key={type}
                     type="button"
-                    className={`py-2 px-2 rounded-lg border-2 font-medium transition-all duration-200 text-xs ${
-                      shotData.shotType === type
-                        ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg transform scale-105'
-                        : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'
-                    }`}
+                    className={`py-2 px-2 rounded-lg border-2 font-medium transition-all duration-200 text-xs ${formData.shotType === type
+                      ? 'bg-indigo-500 text-white border-indigo-500 shadow-lg transform scale-105'
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'
+                      }`}
                     onClick={() =>
-                      setShotData(prev => ({ ...prev, shotType: type }))
+                      setFormData(prev => ({ ...prev, shotType: type }))
                     }
                   >
                     {type}
@@ -216,13 +262,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                   <button
                     key={move}
                     type="button"
-                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${
-                      shotData.postMove === move
-                        ? 'bg-amber-500 text-white border-amber-500 shadow-lg transform scale-105'
-                        : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300'
-                    }`}
+                    className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${formData.postMove === move
+                      ? 'bg-amber-500 text-white border-amber-500 shadow-lg transform scale-105'
+                      : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300'
+                      }`}
                     onClick={() =>
-                      setShotData(prev => ({ ...prev, postMove: move }))
+                      setFormData(prev => ({ ...prev, postMove: move }))
                     }
                   >
                     {move}
@@ -237,20 +282,19 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                 <h3 className="text-base font-semibold mb-2 text-gray-800 flex items-center gap-2">
                   {param.icon} {param.name}
                 </h3>
-                
+
                 {param.type === 'categorical' ? (
                   <div className="grid grid-cols-2 gap-2">
                     {param.options.map(option => (
                       <button
                         key={option}
                         type="button"
-                        className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${
-                          shotData.customFields?.[param.name] === option
-                            ? 'bg-pink-500 text-white border-pink-500 shadow-lg transform scale-105'
-                            : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100 hover:border-pink-300'
-                        }`}
+                        className={`py-2 px-3 rounded-lg border-2 font-medium transition-all duration-200 text-sm ${formData.customFields?.[param.name] === option
+                          ? 'bg-pink-500 text-white border-pink-500 shadow-lg transform scale-105'
+                          : 'bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100 hover:border-pink-300'
+                          }`}
                         onClick={() =>
-                          setShotData(prev => ({
+                          setFormData(prev => ({
                             ...prev,
                             customFields: {
                               ...prev.customFields,
@@ -269,9 +313,9 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                       type="range"
                       min={param.min}
                       max={param.max}
-                      value={shotData.customFields?.[param.name] || param.min}
+                      value={formData.customFields?.[param.name] || param.min}
                       onChange={e =>
-                        setShotData(prev => ({
+                        setFormData(prev => ({
                           ...prev,
                           customFields: {
                             ...prev.customFields,
@@ -281,12 +325,12 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                       }
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                       style={{
-                        background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((shotData.customFields?.[param.name] || param.min) - param.min) / (param.max - param.min) * 100}%, #e5e7eb ${((shotData.customFields?.[param.name] || param.min) - param.min) / (param.max - param.min) * 100}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${((formData.customFields?.[param.name] || param.min) - param.min) / (param.max - param.min) * 100}%, #e5e7eb ${((formData.customFields?.[param.name] || param.min) - param.min) / (param.max - param.min) * 100}%, #e5e7eb 100%)`
                       }}
                     />
                     <div className="flex justify-between text-sm text-gray-600 mt-1">
                       <span>{param.min}</span>
-                      <span className="font-bold text-pink-600">{shotData.customFields?.[param.name] || param.min}</span>
+                      <span className="font-bold text-pink-600">{formData.customFields?.[param.name] || param.min}</span>
                       <span>{param.max}</span>
                     </div>
                   </div>
@@ -304,21 +348,21 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
                   type="range"
                   min="0"
                   max="15"
-                  value={shotData.dribbleCount || 0}
+                  value={formData.dribbleCount || 0}
                   onChange={e =>
-                    setShotData(prev => ({
+                    setFormData(prev => ({
                       ...prev,
                       dribbleCount: parseInt(e.target.value),
                     }))
                   }
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                   style={{
-                    background: `linear-gradient(to right, #f97316 0%, #f97316 ${((shotData.dribbleCount || 0) / 15) * 100}%, #e5e7eb ${((shotData.dribbleCount || 0) / 15) * 100}%, #e5e7eb 100%)`
+                    background: `linear-gradient(to right, #f97316 0%, #f97316 ${((formData.dribbleCount || 0) / 15) * 100}%, #e5e7eb ${((formData.dribbleCount || 0) / 15) * 100}%, #e5e7eb 100%)`
                   }}
                 />
                 <div className="flex justify-between text-sm text-gray-600 mt-1">
                   <span>0</span>
-                  <span className="font-bold text-orange-600">{shotData.dribbleCount || 0}</span>
+                  <span className="font-bold text-orange-600">{formData.dribbleCount || 0}</span>
                   <span>15</span>
                 </div>
               </div>
@@ -332,9 +376,9 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
               <label className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 cursor-pointer hover:bg-gray-100 transition-colors">
                 <input
                   type="checkbox"
-                  checked={shotData.made || false}
+                  checked={formData.made || false}
                   onChange={e =>
-                    setShotData(prev => ({ ...prev, made: e.target.checked }))
+                    setFormData(prev => ({ ...prev, made: e.target.checked }))
                   }
                   className="w-5 h-5 text-green-600 rounded focus:ring-green-500 focus:ring-2"
                 />
@@ -355,7 +399,7 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
           <button
             onClick={e => {
               e.preventDefault();
-              onSubmit(shotData);
+              onSubmit(formData);
             }}
             className="flex-1 py-2 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
           >
