@@ -41,16 +41,41 @@ const Visualization = () => {
     const missedShots = totalShots - madeShots;
     const shootingPercentage = totalShots ? (madeShots / totalShots) * 100 : 0;
 
+    // Calculate total points scored
+    const totalPoints = shots.reduce((total, shot) => {
+      if (shot.made) {
+        const pointValue = shot.shotValue === '3' ? 3 : 2;
+        return total + pointValue;
+      }
+      return total;
+    }, 0);
+
+    const pointsPerShot = totalShots ? (totalPoints / totalShots).toFixed(2) : 0;
+
     // Segment analysis
     const segmentStats = {};
     Object.keys(courtSegments).forEach(segment => {
       const segmentShots = shots.filter(shot => getShotSegment(shot) === segment);
       const segmentMade = segmentShots.filter(shot => shot.made).length;
+
+      // Calculate points for this segment
+      const segmentPoints = segmentShots.reduce((total, shot) => {
+        if (shot.made) {
+          const pointValue = shot.shotValue === '3' ? 3 : 2;
+          return total + pointValue;
+        }
+        return total;
+      }, 0);
+
+      const segmentPointsPerShot = segmentShots.length ? (segmentPoints / segmentShots.length).toFixed(2) : 0;
+
       segmentStats[segment] = {
         total: segmentShots.length,
         made: segmentMade,
         missed: segmentShots.length - segmentMade,
-        percentage: segmentShots.length ? (segmentMade / segmentShots.length) * 100 : 0
+        percentage: segmentShots.length ? (segmentMade / segmentShots.length) * 100 : 0,
+        points: segmentPoints,
+        pointsPerShot: parseFloat(segmentPointsPerShot)
       };
     });
 
@@ -97,7 +122,14 @@ const Visualization = () => {
     });
 
     return {
-      overall: { totalShots, madeShots, missedShots, shootingPercentage },
+      overall: {
+        totalShots,
+        madeShots,
+        missedShots,
+        shootingPercentage,
+        totalPoints,
+        pointsPerShot: parseFloat(pointsPerShot)
+      },
       segments: segmentStats,
       parameters: parameterStats
     };
@@ -136,13 +168,15 @@ const Visualization = () => {
     ];
 
     // Segment Analysis Sheet
-    const segmentHeaders = ["Segment", "Total Shots", "Made", "Missed", "Percentage"];
+    const segmentHeaders = ["Segment", "Total Shots", "Made", "Missed", "Percentage", "Total Points", "Points Per Shot"];
     const segmentRows = Object.entries(stats.segments).map(([segment, data]) => [
       segment,
       data.total,
       data.made,
       data.missed,
-      `${data.percentage.toFixed(2)}%`
+      `${data.percentage.toFixed(2)}%`,
+      data.points,
+      data.pointsPerShot
     ]);
 
     // Parameter Analysis Sheet
@@ -210,7 +244,8 @@ const Visualization = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl p-4 text-center">
               <div className="text-3xl font-bold">{stats.overall.totalShots}</div>
               <div className="text-sm opacity-90">Total Shots</div>
@@ -227,137 +262,151 @@ const Visualization = () => {
               <div className="text-3xl font-bold">{stats.overall.shootingPercentage.toFixed(1)}%</div>
               <div className="text-sm opacity-90">Shooting %</div>
             </div>
+            <div className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-xl p-4 text-center">
+              <div className="text-3xl font-bold">{stats.overall.totalPoints}</div>
+              <div className="text-sm opacity-90">Total Points</div>
+            </div>
+            <div className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl p-4 text-center">
+              <div className="text-3xl font-bold">{stats.overall.pointsPerShot}</div>
+              <div className="text-sm opacity-90">Points/Shot</div>
+            </div>
           </div>
-        </div>
 
-        {/* Court Visualization */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Court Heat Map</h2>
-          <div className="relative">
-            <img
-              src={basketballCourt}
-              alt="Basketball Court"
-              className="w-full h-auto object-contain"
-            />
-
-            {/* Segment Overlays */}
-            {Object.entries(courtSegments).map(([segmentName, bounds]) => {
-              const segmentData = stats.segments[segmentName];
-              const opacity = segmentData.total > 0 ? Math.min(segmentData.total / 10, 0.8) : 0;
-              const color = segmentData.percentage > 50 ? 'bg-green-500' : 'bg-red-500';
-
-              return (
-                <div
-                  key={segmentName}
-                  className={`absolute ${color} cursor-pointer transition-all duration-200 hover:opacity-80`}
-                  style={{
-                    left: `${bounds.x[0]}%`,
-                    top: `${bounds.y[0]}%`,
-                    width: `${bounds.x[1] - bounds.x[0]}%`,
-                    height: `${bounds.y[1] - bounds.y[0]}%`,
-                    opacity: opacity
-                  }}
-                  onClick={() => setSelectedSegment(segmentName)}
-                  title={`${segmentName}: ${segmentData.made}/${segmentData.total} (${segmentData.percentage.toFixed(1)}%)`}
-                />
-              );
-            })}
-
-            {/* Shot Markers */}
-            {shots.map((shot, index) => (
-              <div
-                key={shot.id || index}
-                className={`absolute w-3 h-3 rounded-full transform -translate-x-1/2 -translate-y-1/2 ${shot.made ? 'bg-green-400 border-green-600' : 'bg-red-400 border-red-600'
-                  } border-2`}
-                style={{
-                  left: `${shot.coordinates.x}%`,
-                  top: `${shot.coordinates.y}%`,
-                }}
+          {/* Court Visualization */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Court Heat Map</h2>
+            <div className="relative">
+              <img
+                src={basketballCourt}
+                alt="Basketball Court"
+                className="w-full h-auto object-contain"
               />
-            ))}
-          </div>
-        </div>
 
-        {/* Segment Analysis */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Court Segment Analysis</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(stats.segments)
-              .filter(([_, data]) => data.total > 0)
-              .sort((a, b) => b[1].percentage - a[1].percentage)
-              .map(([segment, data]) => (
+              {/* Segment Overlays */}
+              {Object.entries(courtSegments).map(([segmentName, bounds]) => {
+                const segmentData = stats.segments[segmentName];
+                const opacity = segmentData.total > 0 ? Math.min(segmentData.total / 10, 0.8) : 0;
+                const color = segmentData.percentage > 50 ? 'bg-green-500' : 'bg-red-500';
+
+                return (
+                  <div
+                    key={segmentName}
+                    className={`absolute ${color} cursor-pointer transition-all duration-200 hover:opacity-80`}
+                    style={{
+                      left: `${bounds.x[0]}%`,
+                      top: `${bounds.y[0]}%`,
+                      width: `${bounds.x[1] - bounds.x[0]}%`,
+                      height: `${bounds.y[1] - bounds.y[0]}%`,
+                      opacity: opacity
+                    }}
+                    onClick={() => setSelectedSegment(segmentName)}
+                    title={`${segmentName}: ${segmentData.made}/${segmentData.total} (${segmentData.percentage.toFixed(1)}%)`}
+                  />
+                );
+              })}
+
+              {/* Shot Markers */}
+              {shots.map((shot, index) => (
                 <div
-                  key={segment}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${selectedSegment === segment
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  onClick={() => setSelectedSegment(selectedSegment === segment ? null : segment)}
-                >
-                  <h3 className="font-semibold text-gray-800 mb-2">{segment}</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span>Total:</span>
-                      <span className="font-medium">{data.total}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Made:</span>
-                      <span className="font-medium text-green-600">{data.made}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Percentage:</span>
-                      <span className={`font-bold ${data.percentage > 50 ? 'text-green-600' : 'text-red-600'}`}>
-                        {data.percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="mt-2 bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${data.percentage > 50 ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{ width: `${Math.min(data.percentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
+                  key={shot.id || index}
+                  className={`absolute w-3 h-3 rounded-full transform -translate-x-1/2 -translate-y-1/2 ${shot.made ? 'bg-green-400 border-green-600' : 'bg-red-400 border-red-600'
+                    } border-2`}
+                  style={{
+                    left: `${shot.coordinates.x}%`,
+                    top: `${shot.coordinates.y}%`,
+                  }}
+                />
               ))}
+            </div>
           </div>
-        </div>
 
-        {/* Parameter Analysis */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Parameter Breakdown</h2>
-          <div className="space-y-6">
-            {Object.entries(stats.parameters)
-              .filter(([_, values]) => Object.keys(values).length > 0)
-              .map(([parameter, values]) => (
-                <div key={parameter} className="border-l-4 border-blue-500 pl-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3 capitalize">
-                    {parameter.replace(/([A-Z])/g, ' $1').trim()}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {Object.entries(values)
-                      .sort((a, b) => b[1].total - a[1].total)
-                      .map(([value, data]) => (
-                        <div key={value} className="bg-gray-50 rounded-lg p-3">
-                          <div className="font-medium text-gray-800 mb-1">{value}</div>
-                          <div className="text-sm text-gray-600">
-                            {data.made}/{data.total} ({data.percentage.toFixed(1)}%)
-                          </div>
-                          <div className="mt-1 bg-gray-200 rounded-full h-1">
-                            <div
-                              className={`h-1 rounded-full ${data.percentage > 50 ? 'bg-green-500' : 'bg-red-500'}`}
-                              style={{ width: `${Math.min(data.percentage, 100)}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          {Object.entries(stats.segments)
+            .filter(([_, data]) => data.total > 0)
+            .sort((a, b) => b[1].pointsPerShot - a[1].pointsPerShot) // Sort by points per shot efficiency
+            .map(([segment, data]) => (
+              <div
+                key={segment}
+                className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${selectedSegment === segment
+                  ? 'border-purple-500 bg-purple-50'
+                  : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                onClick={() => setSelectedSegment(selectedSegment === segment ? null : segment)}
+              >
+                <h3 className="font-semibold text-gray-800 mb-2">{segment}</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Total:</span>
+                    <span className="font-medium">{data.total}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Made:</span>
+                    <span className="font-medium text-green-600">{data.made}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Percentage:</span>
+                    <span className={`font-bold ${data.percentage > 50 ? 'text-green-600' : 'text-red-600'}`}>
+                      {data.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Points:</span>
+                    <span className="font-medium text-blue-600">{data.points}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Points/Shot:</span>
+                    <span className={`font-bold ${data.pointsPerShot > 1.0 ? 'text-green-600' : 'text-orange-600'}`}>
+                      {data.pointsPerShot}
+                    </span>
                   </div>
                 </div>
-              ))}
-          </div>
+                <div className="mt-2 bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full ${data.pointsPerShot > 1.0 ? 'bg-green-500' : 'bg-orange-500'}`}
+                    style={{ width: `${Math.min((data.pointsPerShot / 3) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+            </div>
+        </div>
+      </div>
+
+      {/* Parameter Analysis */}
+      <div className="bg-white rounded-3xl shadow-2xl p-8">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Parameter Breakdown</h2>
+        <div className="space-y-6">
+          {Object.entries(stats.parameters)
+            .filter(([_, values]) => Object.keys(values).length > 0)
+            .map(([parameter, values]) => (
+              <div key={parameter} className="border-l-4 border-blue-500 pl-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 capitalize">
+                  {parameter.replace(/([A-Z])/g, ' $1').trim()}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {Object.entries(values)
+                    .sort((a, b) => b[1].total - a[1].total)
+                    .map(([value, data]) => (
+                      <div key={value} className="bg-gray-50 rounded-lg p-3">
+                        <div className="font-medium text-gray-800 mb-1">{value}</div>
+                        <div className="text-sm text-gray-600">
+                          {data.made}/{data.total} ({data.percentage.toFixed(1)}%)
+                        </div>
+                        <div className="mt-1 bg-gray-200 rounded-full h-1">
+                          <div
+                            className={`h-1 rounded-full ${data.percentage > 50 ? 'bg-green-500' : 'bg-red-500'}`}
+                            style={{ width: `${Math.min(data.percentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            ))}
         </div>
       </div>
     </div>
-  );
+      );
 };
 
 export default Visualization;
