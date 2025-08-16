@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "mongodb": "^6.16.0",
-    "mongosh": "^2.5.1"
+    "mongosh": "^2.5.1",
+    "tailwindcss": "^4.1.12"
   }
 }
