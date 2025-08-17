@@ -28,7 +28,7 @@ const ShotModal = ({ isOpen, onClose, onSubmit, initialData, customParameters = 
   // All parameter options
   const contestLevels = ['Uncontested', 'Mid-Contest', 'Contested'];
   const shotCreationTypes = ['Catch and shoot', 'Off the dribble', 'Pump Fake', 'O-board'];
-  const defenseTypes = ['Man', 'Zone', 'Transition', 'Halfcourt'];
+  const defenseTypes = ['Man/Zone', 'Transition/Halfcourt'];
   const shotTypes = ['Floater', 'Hook', 'Fadeaway', 'Jumpshot', 'Tip in', 'Runner', 'Post-up'];
   const postMoves = ['Pin', 'Face up', 'Right-shoulder', 'Left-shoulder'];
 
